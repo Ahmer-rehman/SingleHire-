@@ -1,0 +1,20 @@
+services:
+  signalhire-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: signalhire-mcp
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4010:3333"
+    env_file:
+      - .env
+    environment:
+      - PORT=3333
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3333/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
