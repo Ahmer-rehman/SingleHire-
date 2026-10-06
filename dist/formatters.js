@@ -435,8 +435,52 @@ export function formatBalanceSummary(contactCredits, withoutContactsQuota, compa
     return lines.join("\n");
 }
 // ─── Format Export Data (CSV & Google Sheets TSV) ─────────────────────────────
-export function formatExportData(dataType, items, format = "csv") {
-    if (dataType === "companies") {
+function extractCompanyExportRow(c) {
+    const name = c.company || c.name || c.companyName || c.company_name || c.Company || c.Name || "";
+    const domain = c.domain || c.website || c.url || c.topDomains?.[0] || c.Domain || c.Website || c.URL || "";
+    const headcountVal = c.employeeCount ??
+        c.headcount ??
+        c.employees ??
+        c.staffCount ??
+        c.size ??
+        c.companySize ??
+        c.Headcount ??
+        c.EmployeeCount ??
+        c.Employees ??
+        0;
+    const headcount = String(headcountVal);
+    const locs = c.locations ?? c.location ?? c.Locations ?? c.Location ?? [];
+    const locations = Array.isArray(locs) ? locs.join("; ") : String(locs);
+    const rolesVal = c.sampleRoles ?? c.sample_roles ?? c.roles ?? c.titles ?? c.Roles ?? c.Titles ?? [];
+    const sampleRoles = Array.isArray(rolesVal) ? rolesVal.join("; ") : String(rolesVal);
+    const inds = c.industries ?? c.industry ?? c.Industries ?? c.Industry ?? [];
+    const industries = Array.isArray(inds) ? inds.join("; ") : String(inds);
+    return [name, domain, headcount, locations, sampleRoles, industries];
+}
+function extractCandidateExportRow(p) {
+    const uid = p.uid || p.UID || p.id || p.Id || "";
+    const name = p.fullName || p.name || p.FullName || p.Name || "";
+    const title = p.experience?.[0]?.title || p.title || p.currentTitle || p.role || p.Title || p.Role || "";
+    const company = p.experience?.[0]?.company || p.company || p.currentCompany || p.Company || "";
+    const location = p.location || p.Location || "";
+    const skillsVal = p.skills || p.Skills || [];
+    const skills = Array.isArray(skillsVal) ? skillsVal.join("; ") : String(skillsVal);
+    const open = p.openToWork ?? p.open_to_work ?? p.OpenToWork;
+    const openStr = open === true || open === "true" || open === "Yes" ? "Yes" : "No";
+    return [uid, name, title, company, location, skills, openStr];
+}
+export function formatExportData(dataType = "candidates", items, format = "csv") {
+    // Auto-detect dataType if items clearly contain company structures
+    let targetType = dataType;
+    if (items.length > 0) {
+        const first = items[0];
+        if ((first.company || first.headcount || first.employeeCount || first.domain || first.website) &&
+            !first.uid &&
+            !first.fullName) {
+            targetType = "companies";
+        }
+    }
+    if (targetType === "companies") {
         const headers = [
             "Company",
             "Domain",
@@ -445,14 +489,7 @@ export function formatExportData(dataType, items, format = "csv") {
             "Sample Roles",
             "Industries",
         ];
-        const rows = items.map((c) => [
-            c.company || "",
-            c.topDomains?.[0] || c.domain || "",
-            c.employeeCount || 0,
-            (c.locations || []).join("; "),
-            (c.sampleRoles || []).join("; "),
-            (c.industries || []).join("; "),
-        ]);
+        const rows = items.map(extractCompanyExportRow);
         if (format === "tsv_google_sheets") {
             const tsvLines = [
                 headers.map(escapeTsv).join("\t"),
@@ -475,7 +512,7 @@ export function formatExportData(dataType, items, format = "csv") {
         ].join("\n");
         return csvContent;
     }
-    // dataType === "candidates"
+    // targetType === "candidates"
     const headers = [
         "UID",
         "Full Name",
@@ -485,15 +522,7 @@ export function formatExportData(dataType, items, format = "csv") {
         "Skills",
         "Open to Work",
     ];
-    const rows = items.map((p) => [
-        p.uid || "",
-        p.fullName || "",
-        p.experience?.[0]?.title || "",
-        p.experience?.[0]?.company || "",
-        p.location || "",
-        (p.skills || []).join("; "),
-        p.openToWork ? "Yes" : "No",
-    ]);
+    const rows = items.map(extractCandidateExportRow);
     if (format === "tsv_google_sheets") {
         const tsvLines = [
             headers.map(escapeTsv).join("\t"),

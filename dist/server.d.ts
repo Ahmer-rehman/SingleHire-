@@ -20,6 +20,45 @@ export declare const SIGNALHIRE_TOOLS: ({
                 description: string;
             };
             location: {
+                type: string[];
+                items: {
+                    type: string;
+                };
+                description: string;
+            };
+            latitude: {
+                type: string;
+                description: string;
+            };
+            longitude: {
+                type: string;
+                description: string;
+            };
+            coordinates: {
+                type: string;
+                items: {
+                    type: string;
+                    properties: {
+                        latitude: {
+                            type: string;
+                        };
+                        longitude: {
+                            type: string;
+                        };
+                    };
+                    required: string[];
+                };
+                description: string;
+            };
+            radius: {
+                type: string;
+                description: string;
+            };
+            company_size: {
+                type: string;
+                description: string;
+            };
+            spend_credits_confirmed: {
                 type: string;
                 description: string;
             };
@@ -63,6 +102,10 @@ export declare const SIGNALHIRE_TOOLS: ({
                 items: {
                     type: string;
                 };
+                description: string;
+            };
+            exclude_title: {
+                type: string;
                 description: string;
             };
             strict_current_level: {
@@ -134,23 +177,117 @@ export declare const SIGNALHIRE_TOOLS: ({
                 description: string;
                 default: string;
             };
+            companies?: undefined;
             request_id?: undefined;
             scroll_id?: undefined;
             items?: undefined;
-            spend_credits_confirmed?: undefined;
             without_waterfall?: undefined;
             callback_url?: undefined;
             company_id_or_slug?: undefined;
-            companies?: undefined;
-            company_size?: undefined;
             limit?: undefined;
             company_id?: undefined;
+            status?: undefined;
             filter?: undefined;
             data_type?: undefined;
             format?: undefined;
             search_params?: undefined;
         };
         required?: undefined;
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: string;
+        properties: {
+            companies: {
+                type: string;
+                items: {
+                    type: string;
+                };
+                description: string;
+            };
+            current_title: {
+                type: string;
+                description: string;
+            };
+            exclude_title: {
+                type: string;
+                description: string;
+            };
+            location: {
+                type: string;
+                description: string;
+                items?: undefined;
+            };
+            department: {
+                type: string;
+                items: {
+                    type: string;
+                    enum: ("Marketing" | "Sales" | "Product & Project" | "Engineering / Development" | "Data & Analytics" | "Design / UX" | "HR & Recruitment" | "Finance & Accounting" | "Legal / Compliance" | "Customer Support / Success" | "Health, Beauty & Hospitality" | "Education & Training" | "Operations & Admin" | "Facility Services" | "Entertainment / Production")[];
+                };
+                description: string;
+            };
+            level: {
+                type: string;
+                items: {
+                    type: string;
+                };
+                description: string;
+            };
+            max_results: {
+                type: string;
+                description: string;
+                default: number;
+            };
+            response_format: {
+                type: string;
+                enum: string[];
+                description: string;
+                default: string;
+            };
+            current_past_title?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            company_size?: undefined;
+            spend_credits_confirmed?: undefined;
+            current_company?: undefined;
+            current_past_company?: undefined;
+            full_name?: undefined;
+            keywords?: undefined;
+            industry?: undefined;
+            industries?: undefined;
+            strict_current_level?: undefined;
+            years_experience_from?: undefined;
+            years_experience_to?: undefined;
+            years_current_past_experience_from?: undefined;
+            years_current_past_experience_to?: undefined;
+            education?: undefined;
+            open_to_work?: undefined;
+            exclude_revealed?: undefined;
+            exclude_watched?: undefined;
+            exclude_in_lists?: undefined;
+            exclude_in_progress?: undefined;
+            exclude_emailed?: undefined;
+            size?: undefined;
+            auto_paginate?: undefined;
+            request_id?: undefined;
+            scroll_id?: undefined;
+            items?: undefined;
+            without_waterfall?: undefined;
+            callback_url?: undefined;
+            company_id_or_slug?: undefined;
+            limit?: undefined;
+            company_id?: undefined;
+            status?: undefined;
+            filter?: undefined;
+            data_type?: undefined;
+            format?: undefined;
+            search_params?: undefined;
+        };
+        required: string[];
     };
 } | {
     name: string;
@@ -175,6 +312,12 @@ export declare const SIGNALHIRE_TOOLS: ({
             current_title?: undefined;
             current_past_title?: undefined;
             location?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            company_size?: undefined;
+            spend_credits_confirmed?: undefined;
             current_company?: undefined;
             current_past_company?: undefined;
             full_name?: undefined;
@@ -183,6 +326,7 @@ export declare const SIGNALHIRE_TOOLS: ({
             industries?: undefined;
             department?: undefined;
             level?: undefined;
+            exclude_title?: undefined;
             strict_current_level?: undefined;
             years_experience_from?: undefined;
             years_experience_to?: undefined;
@@ -198,15 +342,14 @@ export declare const SIGNALHIRE_TOOLS: ({
             size?: undefined;
             auto_paginate?: undefined;
             max_results?: undefined;
+            companies?: undefined;
             items?: undefined;
-            spend_credits_confirmed?: undefined;
             without_waterfall?: undefined;
             callback_url?: undefined;
             company_id_or_slug?: undefined;
-            companies?: undefined;
-            company_size?: undefined;
             limit?: undefined;
             company_id?: undefined;
+            status?: undefined;
             filter?: undefined;
             data_type?: undefined;
             format?: undefined;
@@ -236,6 +379,12 @@ export declare const SIGNALHIRE_TOOLS: ({
             current_title?: undefined;
             current_past_title?: undefined;
             location?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            company_size?: undefined;
+            spend_credits_confirmed?: undefined;
             current_company?: undefined;
             current_past_company?: undefined;
             full_name?: undefined;
@@ -244,6 +393,7 @@ export declare const SIGNALHIRE_TOOLS: ({
             industries?: undefined;
             department?: undefined;
             level?: undefined;
+            exclude_title?: undefined;
             strict_current_level?: undefined;
             years_experience_from?: undefined;
             years_experience_to?: undefined;
@@ -259,16 +409,15 @@ export declare const SIGNALHIRE_TOOLS: ({
             size?: undefined;
             auto_paginate?: undefined;
             max_results?: undefined;
+            companies?: undefined;
             request_id?: undefined;
             scroll_id?: undefined;
-            spend_credits_confirmed?: undefined;
             without_waterfall?: undefined;
             callback_url?: undefined;
             company_id_or_slug?: undefined;
-            companies?: undefined;
-            company_size?: undefined;
             limit?: undefined;
             company_id?: undefined;
+            status?: undefined;
             filter?: undefined;
             data_type?: undefined;
             format?: undefined;
@@ -311,6 +460,11 @@ export declare const SIGNALHIRE_TOOLS: ({
             current_title?: undefined;
             current_past_title?: undefined;
             location?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            company_size?: undefined;
             current_company?: undefined;
             current_past_company?: undefined;
             full_name?: undefined;
@@ -319,6 +473,7 @@ export declare const SIGNALHIRE_TOOLS: ({
             industries?: undefined;
             department?: undefined;
             level?: undefined;
+            exclude_title?: undefined;
             strict_current_level?: undefined;
             years_experience_from?: undefined;
             years_experience_to?: undefined;
@@ -334,13 +489,13 @@ export declare const SIGNALHIRE_TOOLS: ({
             size?: undefined;
             auto_paginate?: undefined;
             max_results?: undefined;
+            companies?: undefined;
             request_id?: undefined;
             scroll_id?: undefined;
             company_id_or_slug?: undefined;
-            companies?: undefined;
-            company_size?: undefined;
             limit?: undefined;
             company_id?: undefined;
+            status?: undefined;
             filter?: undefined;
             data_type?: undefined;
             format?: undefined;
@@ -361,9 +516,16 @@ export declare const SIGNALHIRE_TOOLS: ({
             location: {
                 type: string;
                 description: string;
+                items?: undefined;
             };
             current_title?: undefined;
             current_past_title?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            company_size?: undefined;
+            spend_credits_confirmed?: undefined;
             current_company?: undefined;
             current_past_company?: undefined;
             full_name?: undefined;
@@ -372,6 +534,7 @@ export declare const SIGNALHIRE_TOOLS: ({
             industries?: undefined;
             department?: undefined;
             level?: undefined;
+            exclude_title?: undefined;
             strict_current_level?: undefined;
             years_experience_from?: undefined;
             years_experience_to?: undefined;
@@ -388,16 +551,15 @@ export declare const SIGNALHIRE_TOOLS: ({
             auto_paginate?: undefined;
             max_results?: undefined;
             response_format?: undefined;
+            companies?: undefined;
             request_id?: undefined;
             scroll_id?: undefined;
             items?: undefined;
-            spend_credits_confirmed?: undefined;
             without_waterfall?: undefined;
             callback_url?: undefined;
-            companies?: undefined;
-            company_size?: undefined;
             limit?: undefined;
             company_id?: undefined;
+            status?: undefined;
             filter?: undefined;
             data_type?: undefined;
             format?: undefined;
@@ -421,6 +583,7 @@ export declare const SIGNALHIRE_TOOLS: ({
             location: {
                 type: string;
                 description: string;
+                items?: undefined;
             };
             response_format: {
                 type: string;
@@ -430,6 +593,12 @@ export declare const SIGNALHIRE_TOOLS: ({
             };
             current_title?: undefined;
             current_past_title?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            company_size?: undefined;
+            spend_credits_confirmed?: undefined;
             current_company?: undefined;
             current_past_company?: undefined;
             full_name?: undefined;
@@ -438,6 +607,7 @@ export declare const SIGNALHIRE_TOOLS: ({
             industries?: undefined;
             department?: undefined;
             level?: undefined;
+            exclude_title?: undefined;
             strict_current_level?: undefined;
             years_experience_from?: undefined;
             years_experience_to?: undefined;
@@ -456,13 +626,12 @@ export declare const SIGNALHIRE_TOOLS: ({
             request_id?: undefined;
             scroll_id?: undefined;
             items?: undefined;
-            spend_credits_confirmed?: undefined;
             without_waterfall?: undefined;
             callback_url?: undefined;
             company_id_or_slug?: undefined;
-            company_size?: undefined;
             limit?: undefined;
             company_id?: undefined;
+            status?: undefined;
             filter?: undefined;
             data_type?: undefined;
             format?: undefined;
@@ -483,6 +652,7 @@ export declare const SIGNALHIRE_TOOLS: ({
             location: {
                 type: string;
                 description: string;
+                items?: undefined;
             };
             keywords: {
                 type: string;
@@ -505,12 +675,18 @@ export declare const SIGNALHIRE_TOOLS: ({
             };
             current_title?: undefined;
             current_past_title?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            spend_credits_confirmed?: undefined;
             current_company?: undefined;
             current_past_company?: undefined;
             full_name?: undefined;
             industries?: undefined;
             department?: undefined;
             level?: undefined;
+            exclude_title?: undefined;
             strict_current_level?: undefined;
             years_experience_from?: undefined;
             years_experience_to?: undefined;
@@ -526,15 +702,15 @@ export declare const SIGNALHIRE_TOOLS: ({
             size?: undefined;
             auto_paginate?: undefined;
             max_results?: undefined;
+            companies?: undefined;
             request_id?: undefined;
             scroll_id?: undefined;
             items?: undefined;
-            spend_credits_confirmed?: undefined;
             without_waterfall?: undefined;
             callback_url?: undefined;
             company_id_or_slug?: undefined;
-            companies?: undefined;
             company_id?: undefined;
+            status?: undefined;
             filter?: undefined;
             data_type?: undefined;
             format?: undefined;
@@ -565,6 +741,11 @@ export declare const SIGNALHIRE_TOOLS: ({
             current_title?: undefined;
             current_past_title?: undefined;
             location?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            company_size?: undefined;
             current_company?: undefined;
             current_past_company?: undefined;
             full_name?: undefined;
@@ -573,6 +754,7 @@ export declare const SIGNALHIRE_TOOLS: ({
             industries?: undefined;
             department?: undefined;
             level?: undefined;
+            exclude_title?: undefined;
             strict_current_level?: undefined;
             years_experience_from?: undefined;
             years_experience_to?: undefined;
@@ -588,14 +770,147 @@ export declare const SIGNALHIRE_TOOLS: ({
             size?: undefined;
             auto_paginate?: undefined;
             max_results?: undefined;
+            companies?: undefined;
             request_id?: undefined;
             scroll_id?: undefined;
             items?: undefined;
             without_waterfall?: undefined;
             callback_url?: undefined;
             company_id_or_slug?: undefined;
-            companies?: undefined;
+            limit?: undefined;
+            status?: undefined;
+            filter?: undefined;
+            data_type?: undefined;
+            format?: undefined;
+            search_params?: undefined;
+        };
+        required: string[];
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: string;
+        properties: {
+            company_id: {
+                type: string;
+                description: string;
+            };
+            status: {
+                type: string;
+                enum: string[];
+                description: string;
+                default: string;
+            };
+            current_title?: undefined;
+            current_past_title?: undefined;
+            location?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
             company_size?: undefined;
+            spend_credits_confirmed?: undefined;
+            current_company?: undefined;
+            current_past_company?: undefined;
+            full_name?: undefined;
+            keywords?: undefined;
+            industry?: undefined;
+            industries?: undefined;
+            department?: undefined;
+            level?: undefined;
+            exclude_title?: undefined;
+            strict_current_level?: undefined;
+            years_experience_from?: undefined;
+            years_experience_to?: undefined;
+            years_current_past_experience_from?: undefined;
+            years_current_past_experience_to?: undefined;
+            education?: undefined;
+            open_to_work?: undefined;
+            exclude_revealed?: undefined;
+            exclude_watched?: undefined;
+            exclude_in_lists?: undefined;
+            exclude_in_progress?: undefined;
+            exclude_emailed?: undefined;
+            size?: undefined;
+            auto_paginate?: undefined;
+            max_results?: undefined;
+            response_format?: undefined;
+            companies?: undefined;
+            request_id?: undefined;
+            scroll_id?: undefined;
+            items?: undefined;
+            without_waterfall?: undefined;
+            callback_url?: undefined;
+            company_id_or_slug?: undefined;
+            limit?: undefined;
+            filter?: undefined;
+            data_type?: undefined;
+            format?: undefined;
+            search_params?: undefined;
+        };
+        required: string[];
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: string;
+        properties: {
+            company_id: {
+                type: string;
+                description: string;
+            };
+            status: {
+                type: string;
+                enum: string[];
+                description: string;
+                default: string;
+            };
+            callback_url: {
+                type: string;
+                description: string;
+            };
+            current_title?: undefined;
+            current_past_title?: undefined;
+            location?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            company_size?: undefined;
+            spend_credits_confirmed?: undefined;
+            current_company?: undefined;
+            current_past_company?: undefined;
+            full_name?: undefined;
+            keywords?: undefined;
+            industry?: undefined;
+            industries?: undefined;
+            department?: undefined;
+            level?: undefined;
+            exclude_title?: undefined;
+            strict_current_level?: undefined;
+            years_experience_from?: undefined;
+            years_experience_to?: undefined;
+            years_current_past_experience_from?: undefined;
+            years_current_past_experience_to?: undefined;
+            education?: undefined;
+            open_to_work?: undefined;
+            exclude_revealed?: undefined;
+            exclude_watched?: undefined;
+            exclude_in_lists?: undefined;
+            exclude_in_progress?: undefined;
+            exclude_emailed?: undefined;
+            size?: undefined;
+            auto_paginate?: undefined;
+            max_results?: undefined;
+            response_format?: undefined;
+            companies?: undefined;
+            request_id?: undefined;
+            scroll_id?: undefined;
+            items?: undefined;
+            without_waterfall?: undefined;
+            company_id_or_slug?: undefined;
             limit?: undefined;
             filter?: undefined;
             data_type?: undefined;
@@ -613,6 +928,12 @@ export declare const SIGNALHIRE_TOOLS: ({
             current_title?: undefined;
             current_past_title?: undefined;
             location?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            company_size?: undefined;
+            spend_credits_confirmed?: undefined;
             current_company?: undefined;
             current_past_company?: undefined;
             full_name?: undefined;
@@ -621,6 +942,7 @@ export declare const SIGNALHIRE_TOOLS: ({
             industries?: undefined;
             department?: undefined;
             level?: undefined;
+            exclude_title?: undefined;
             strict_current_level?: undefined;
             years_experience_from?: undefined;
             years_experience_to?: undefined;
@@ -637,17 +959,16 @@ export declare const SIGNALHIRE_TOOLS: ({
             auto_paginate?: undefined;
             max_results?: undefined;
             response_format?: undefined;
+            companies?: undefined;
             request_id?: undefined;
             scroll_id?: undefined;
             items?: undefined;
-            spend_credits_confirmed?: undefined;
             without_waterfall?: undefined;
             callback_url?: undefined;
             company_id_or_slug?: undefined;
-            companies?: undefined;
-            company_size?: undefined;
             limit?: undefined;
             company_id?: undefined;
+            status?: undefined;
             filter?: undefined;
             data_type?: undefined;
             format?: undefined;
@@ -668,6 +989,12 @@ export declare const SIGNALHIRE_TOOLS: ({
             current_title?: undefined;
             current_past_title?: undefined;
             location?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            company_size?: undefined;
+            spend_credits_confirmed?: undefined;
             current_company?: undefined;
             current_past_company?: undefined;
             full_name?: undefined;
@@ -676,6 +1003,7 @@ export declare const SIGNALHIRE_TOOLS: ({
             industries?: undefined;
             department?: undefined;
             level?: undefined;
+            exclude_title?: undefined;
             strict_current_level?: undefined;
             years_experience_from?: undefined;
             years_experience_to?: undefined;
@@ -692,17 +1020,16 @@ export declare const SIGNALHIRE_TOOLS: ({
             auto_paginate?: undefined;
             max_results?: undefined;
             response_format?: undefined;
+            companies?: undefined;
             request_id?: undefined;
             scroll_id?: undefined;
             items?: undefined;
-            spend_credits_confirmed?: undefined;
             without_waterfall?: undefined;
             callback_url?: undefined;
             company_id_or_slug?: undefined;
-            companies?: undefined;
-            company_size?: undefined;
             limit?: undefined;
             company_id?: undefined;
+            status?: undefined;
             data_type?: undefined;
             format?: undefined;
             search_params?: undefined;
@@ -739,6 +1066,12 @@ export declare const SIGNALHIRE_TOOLS: ({
             current_title?: undefined;
             current_past_title?: undefined;
             location?: undefined;
+            latitude?: undefined;
+            longitude?: undefined;
+            coordinates?: undefined;
+            radius?: undefined;
+            company_size?: undefined;
+            spend_credits_confirmed?: undefined;
             current_company?: undefined;
             current_past_company?: undefined;
             full_name?: undefined;
@@ -747,6 +1080,7 @@ export declare const SIGNALHIRE_TOOLS: ({
             industries?: undefined;
             department?: undefined;
             level?: undefined;
+            exclude_title?: undefined;
             strict_current_level?: undefined;
             years_experience_from?: undefined;
             years_experience_to?: undefined;
@@ -763,16 +1097,15 @@ export declare const SIGNALHIRE_TOOLS: ({
             auto_paginate?: undefined;
             max_results?: undefined;
             response_format?: undefined;
+            companies?: undefined;
             request_id?: undefined;
             scroll_id?: undefined;
-            spend_credits_confirmed?: undefined;
             without_waterfall?: undefined;
             callback_url?: undefined;
             company_id_or_slug?: undefined;
-            companies?: undefined;
-            company_size?: undefined;
             limit?: undefined;
             company_id?: undefined;
+            status?: undefined;
             filter?: undefined;
         };
         required?: undefined;

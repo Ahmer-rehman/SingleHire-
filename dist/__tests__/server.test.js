@@ -140,8 +140,8 @@ test("Formatters: formatExportData exports candidates and companies to TSV & CSV
     assert.ok(csv.includes('"Ahmed Al-Salem"'));
     assert.ok(csv.includes('"CTO"'));
 });
-test("Server: registers all 14 tools, resources, and prompts", () => {
-    assert.equal(SIGNALHIRE_TOOLS.length, 14);
+test("Server: registers all 17 tools, resources, and prompts", () => {
+    assert.equal(SIGNALHIRE_TOOLS.length, 17);
     const toolNames = SIGNALHIRE_TOOLS.map((t) => t.name);
     assert.ok(toolNames.includes("search_candidates_query"));
     assert.ok(toolNames.includes("find_company"));
@@ -150,6 +150,7 @@ test("Server: registers all 14 tools, resources, and prompts", () => {
     assert.ok(toolNames.includes("export_to_csv"));
     assert.ok(toolNames.includes("check_balance"));
     assert.ok(toolNames.includes("check_without_contacts_credits"));
+    assert.ok(toolNames.includes("search_people_at_companies"));
     const { server } = createSignalHireMcpServer({ apiKey: "test-key" });
     assert.ok(server);
 });
@@ -159,4 +160,30 @@ test("Client: handles missing API key gracefully", async () => {
     await assert.rejects(async () => {
         await client.checkCredits();
     }, /SignalHire API Key is missing/);
+});
+test("Client: domainFromProfiles and filterExcludedTitles use profile data", async () => {
+    const { domainFromProfiles, filterExcludedTitles } = await import("../client.js");
+    const profiles = [
+        { uid: "1", fullName: "A", experience: [{ company: "Elm", title: "CTO", website: "https://www.elm.sa/en" }] },
+        { uid: "2", fullName: "B", experience: [{ company: "Elm", title: "HR Intern", website: "elm.sa" }] },
+        { uid: "3", fullName: "C", experience: [{ company: "Other", title: "Recruiter", website: "other.com" }] },
+    ];
+    assert.equal(domainFromProfiles(profiles, "Elm"), "elm.sa");
+    assert.equal(domainFromProfiles([], "Elm"), undefined);
+    const kept = filterExcludedTitles(profiles, "Intern OR Recruiter");
+    assert.deepEqual(kept.map((p) => p.uid), ["1"]);
+});
+test("Client: toCompanySlug and matchesCompanySize", async () => {
+    const { toCompanySlug, matchesCompanySize } = await import("../client.js");
+    assert.equal(toCompanySlug("STC Solutions"), "stc-solutions");
+    assert.equal(toCompanySlug("1033"), "1033");
+    assert.ok(matchesCompanySize(300, "201-500"));
+    assert.ok(!matchesCompanySize(600, "201-500"));
+    assert.ok(matchesCompanySize(6000, "5001+"));
+});
+test("Server: company_size asks for credit confirmation before any API call", async () => {
+    const { executeSignalHireTool } = await import("../server.js");
+    const { SignalHireApiClient } = await import("../client.js");
+    const res = await executeSignalHireTool("search_candidates_query", { current_title: "CTO", company_size: "201-500" }, new SignalHireApiClient({ apiKey: "" }));
+    assert.ok(res.content[0].text.includes("spend_credits_confirmed"));
 });

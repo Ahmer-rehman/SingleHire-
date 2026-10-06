@@ -25,8 +25,38 @@ export const SIGNALHIRE_TOOLS = [
                     description: "Boolean query for current or past job title (takes precedence over current_title if both set)",
                 },
                 location: {
+                    type: ["string", "array"],
+                    items: { type: "string" },
+                    description: "Geographic area, or a list of them: Country ('Saudi Arabia', 'Germany'), State ('California, US'), or City ('Riyadh', 'Dubai', 'London')",
+                },
+                latitude: {
+                    type: "number",
+                    description: "Latitude for geo search (with longitude). Overrides location.",
+                },
+                longitude: {
+                    type: "number",
+                    description: "Longitude for geo search (with latitude).",
+                },
+                coordinates: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: { latitude: { type: "number" }, longitude: { type: "number" } },
+                        required: ["latitude", "longitude"],
+                    },
+                    description: "Several geo points to search around. Overrides location. Ignored when latitude/longitude are set.",
+                },
+                radius: {
+                    type: "number",
+                    description: "Search radius in km (10-160, default 10) for geo points and city locations.",
+                },
+                company_size: {
                     type: "string",
-                    description: "Geographic area: Country ('Saudi Arabia', 'Germany'), State ('California, US'), or City ('Riyadh', 'Dubai', 'London')",
+                    description: "Keep only people whose current company headcount is in this range, e.g. '201-500', '5001+'. Not a SignalHire search filter: checked afterwards with /company/info (1 Company Credit per new company, needs the firmographics add-on). Requires spend_credits_confirmed=true.",
+                },
+                spend_credits_confirmed: {
+                    type: "boolean",
+                    description: "Required with company_size, after the user agrees to spend Company Credits.",
                 },
                 current_company: {
                     type: "string",
@@ -62,6 +92,10 @@ export const SIGNALHIRE_TOOLS = [
                     type: "array",
                     items: { type: "string" },
                     description: "Filter by seniority level: 'C-Level', 'VP', 'Directors', 'Head', 'Lead', 'Senior', 'Mid-Level', 'Junior', 'Intern / Entry Level', 'Founder / Owner', 'Board / Advisory'. Combinations like 'C-Level/VP' or lowercase are auto-normalized.",
+                },
+                exclude_title: {
+                    type: "string",
+                    description: "Titles to exclude, e.g. 'Intern OR Assistant OR Recruiter'. Applied to returned profiles' current title after the search, so fewer than max_results may come back.",
                 },
                 strict_current_level: {
                     type: "boolean",
@@ -133,6 +167,37 @@ export const SIGNALHIRE_TOOLS = [
                     default: "markdown",
                 },
             },
+        },
+    },
+    {
+        name: "search_people_at_companies",
+        description: "Find people at a list of companies in as few searches as possible (companies are batched into OR queries, 10 per search). Use after search_companies_by_filters or bulk_find_company. Uses daily search quota (no contact credits).",
+        inputSchema: {
+            type: "object",
+            properties: {
+                companies: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Company names, e.g. ['Elm', 'Ejada', 'STC Solutions'] (up to 50)",
+                },
+                current_title: { type: "string", description: "Boolean query for current job title" },
+                exclude_title: { type: "string", description: "Titles to exclude, e.g. 'Intern OR Assistant'" },
+                location: { type: "string", description: "Country, state, or city" },
+                department: {
+                    type: "array",
+                    items: { type: "string", enum: [...SIGNALHIRE_DEPARTMENTS] },
+                    description: "Filter by professional departments",
+                },
+                level: { type: "array", items: { type: "string" }, description: "Seniority levels" },
+                max_results: { type: "number", description: "Total people to return (1-200, default 50)", default: 50 },
+                response_format: {
+                    type: "string",
+                    enum: ["markdown", "json", "csv"],
+                    description: "Output format: markdown, json, or csv",
+                    default: "markdown",
+                },
+            },
+            required: ["companies"],
         },
     },
     {
@@ -318,6 +383,41 @@ export const SIGNALHIRE_TOOLS = [
         },
     },
     {
+        name: "get_company_profile_count",
+        description: "Free count of SignalHire profiles for one company (current, past, or both employees). Not real headcount. Needs Company API access.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                company_id: { type: "string", description: "Numeric company ID or slug (from find_company)" },
+                status: {
+                    type: "string",
+                    enum: ["current", "past", "both"],
+                    description: "Employment status (default: current)",
+                    default: "current",
+                },
+            },
+            required: ["company_id"],
+        },
+    },
+    {
+        name: "get_company_profiles",
+        description: "Request all employee profiles of a company. Profiles (no contacts) are POSTed to callback_url in batches of 100. Uses the daily profile-view quota. Needs Company API access.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                company_id: { type: "string", description: "Numeric company ID or slug (from find_company)" },
+                status: {
+                    type: "string",
+                    enum: ["current", "past", "both"],
+                    description: "Employment status (default: current)",
+                    default: "current",
+                },
+                callback_url: { type: "string", description: "Public URL that will receive the profiles" },
+            },
+            required: ["company_id", "callback_url"],
+        },
+    },
+    {
         name: "check_balance",
         description: "Check all SignalHire account balances and quotas: standard Contact Credits, daily Without-Contacts quota (with exact reset countdown), and Company Intelligence API status. Free tool.",
         inputSchema: {
@@ -386,7 +486,7 @@ export const SIGNALHIRE_TOOLS = [
                 },
                 items: {
                     type: "array",
-                    description: "Optional array of previously fetched candidate profiles or companies to export.",
+                    description: "Array of objects to export. Flexible field aliases accepted! For companies: company/name, domain/website/url, headcount/employeeCount/size, location/locations (string or array), sampleRoles/roles, industry/industries. For candidates: fullName/name, title/role, company, location, skills (string or array), uid/id.",
                 },
             },
         },
@@ -397,12 +497,22 @@ export async function executeSignalHireTool(toolName, args = {}, client) {
     try {
         switch (toolName) {
             case "search_candidates_query": {
-                const autoPaginate = Boolean(args.auto_paginate || (args.max_results && args.max_results > 10));
-                const maxResults = args.max_results ? Number(args.max_results) : args.size ? Number(args.size) : 10;
+                const targetCount = args.max_results
+                    ? Number(args.max_results)
+                    : args.size
+                        ? Number(args.size)
+                        : 10;
+                const autoPaginate = Boolean(args.auto_paginate ||
+                    targetCount > 10 ||
+                    (args.strict_current_level && targetCount > 5));
                 const searchParams = {
                     currentTitle: args.current_title,
                     currentPastTitle: args.current_past_title,
                     location: args.location,
+                    latitude: args.latitude,
+                    longitude: args.longitude,
+                    coordinates: args.coordinates,
+                    radius: args.radius,
                     currentCompany: args.current_company,
                     currentPastCompany: args.current_past_company,
                     fullName: args.full_name,
@@ -412,6 +522,7 @@ export async function executeSignalHireTool(toolName, args = {}, client) {
                     department: args.department,
                     level: args.level,
                     strictCurrentLevel: args.strict_current_level,
+                    excludeTitle: args.exclude_title,
                     yearsOfCurrentExperienceFrom: args.years_experience_from,
                     yearsOfCurrentExperienceTo: args.years_experience_to,
                     yearsOfCurrentPastExperienceFrom: args.years_current_past_experience_from,
@@ -423,13 +534,62 @@ export async function executeSignalHireTool(toolName, args = {}, client) {
                     excludeInLists: args.exclude_in_lists,
                     excludeInProgress: args.exclude_in_progress,
                     excludeEmailed: args.exclude_emailed,
-                    size: args.size ? Number(args.size) : 10,
+                    size: targetCount,
                 };
+                if (args.company_size && !args.spend_credits_confirmed) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: `⚠️ **Company Credit Confirmation Required**\n\nThe \`company_size\` filter is checked with /company/info, which costs **1 Company Credit per distinct company** in the results (cached afterwards). Up to ${targetCount} companies could be checked.\n\nAsk the user for permission, then re-run with \`spend_credits_confirmed: true\`.`,
+                            },
+                        ],
+                    };
+                }
                 const response = autoPaginate
-                    ? await client.searchCandidatesAutoPaginate(searchParams, maxResults)
+                    ? await client.searchCandidatesAutoPaginate(searchParams, targetCount)
                     : await client.searchCandidates(searchParams);
+                let sizeNote = "";
+                if (args.company_size) {
+                    try {
+                        const before = response.profiles.length;
+                        const sized = await client.filterProfilesByCompanySize(response.profiles, String(args.company_size));
+                        response.profiles = sized.profiles;
+                        sizeNote = `\n\n> Company size filter \`${args.company_size}\`: kept ${sized.profiles.length} of ${before} profiles after checking ${sized.checkedCompanies} companies.${sized.unknownCompanies.length
+                            ? ` No headcount found for: ${sized.unknownCompanies.slice(0, 10).join(", ")} (excluded).`
+                            : ""} The total above is before this filter.`;
+                    }
+                    catch (err) {
+                        if (err.statusCode === 403) {
+                            return {
+                                content: [
+                                    {
+                                        type: "text",
+                                        text: "⚠️ **company_size needs the firmographics add-on.** /company/info returned 403 on this account, so headcount can't be checked. Remove company_size or enable Company API access with SignalHire.",
+                                    },
+                                ],
+                            };
+                        }
+                        throw err;
+                    }
+                }
                 const formatted = formatSearchResults(response, (args.response_format || "markdown"), client.lastCreditsLeft);
-                return { content: [{ type: "text", text: formatted }] };
+                return { content: [{ type: "text", text: formatted + sizeNote }] };
+            }
+            case "search_people_at_companies": {
+                const companies = Array.isArray(args.companies) ? args.companies : [args.companies];
+                const response = await client.searchPeopleAtCompanies(companies.slice(0, 50), {
+                    currentTitle: args.current_title,
+                    excludeTitle: args.exclude_title,
+                    location: args.location,
+                    department: args.department,
+                    level: args.level,
+                }, args.max_results ? Number(args.max_results) : 50);
+                const formatted = formatSearchResults(response, (args.response_format || "markdown"), client.lastCreditsLeft);
+                const note = response.incomplete
+                    ? "\n\n> ⚠️ Incomplete: a batch of companies failed, so these are partial results and the total is a lower bound."
+                    : "";
+                return { content: [{ type: "text", text: formatted + note }] };
             }
             case "scroll_search": {
                 const response = await client.scrollSearch(Number(args.request_id), String(args.scroll_id));
@@ -555,11 +715,11 @@ export async function executeSignalHireTool(toolName, args = {}, client) {
                 }
                 catch (err) {
                     if (err.statusCode === 403 || String(err.message).includes("403")) {
-                        // Graceful fallback to employee talent pool stats
+                        const notice = `> ⚠️ **Company firmographics are not enabled on this account (HTTP 403).** No Company Credit was spent. Real headcount needs the SignalHire firmographics add-on. The numbers below are SignalHire profile counts, not real headcount.\n\n`;
                         try {
                             const enriched = await client.findCompanyEnriched(companyId);
                             const formatted = formatCompanyFind(enriched, client.lastCreditsLeft);
-                            return { content: [{ type: "text", text: formatted }] };
+                            return { content: [{ type: "text", text: notice + formatted }] };
                         }
                         catch {
                             return {
@@ -574,6 +734,32 @@ export async function executeSignalHireTool(toolName, args = {}, client) {
                     }
                     throw err;
                 }
+            }
+            case "get_company_profile_count": {
+                const companyId = String(args.company_id || "").trim();
+                const status = (args.status || "current");
+                const res = await client.getCompanyCount(companyId, status);
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: `### 🏢 \`${companyId}\`: **${res.total_profiles.toLocaleString()}** ${status} employee profiles in SignalHire\n\n> Profiles held, not real headcount. Free call.`,
+                        },
+                    ],
+                };
+            }
+            case "get_company_profiles": {
+                const companyId = String(args.company_id || "").trim();
+                const status = (args.status || "current");
+                const res = await client.getCompanyProfiles(companyId, status, String(args.callback_url));
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: `Profile export started for \`${companyId}\` (${status}).\n- **Search ID:** \`${res.searchId}\`\n- Profiles will be POSTed to \`${args.callback_url}\` in batches of up to 100. Pass their \`uid\` to retrieve_person_profile for contacts.`,
+                        },
+                    ],
+                };
             }
             case "check_balance": {
                 let contactBalance = 2000;
@@ -714,7 +900,15 @@ export function createSignalHireMcpServer(options = {}) {
     server.tool("search_candidates_query", "Search people, find candidates, discover leads, and source talent from the SignalHire database of hundreds of millions of professionals using advanced filters (title, location, company, keywords, department, seniority level). Uses daily search quota.", {
         current_title: z.string().optional(),
         current_past_title: z.string().optional(),
-        location: z.string().optional(),
+        location: z.union([z.string(), z.array(z.string())]).optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        coordinates: z
+            .array(z.object({ latitude: z.number(), longitude: z.number() }))
+            .optional(),
+        radius: z.number().min(10).max(160).optional(),
+        company_size: z.string().optional(),
+        spend_credits_confirmed: z.boolean().optional(),
         current_company: z.string().optional(),
         current_past_company: z.string().optional(),
         full_name: z.string().optional(),
@@ -726,6 +920,7 @@ export function createSignalHireMcpServer(options = {}) {
             .optional(),
         level: z.array(z.string()).optional(),
         strict_current_level: z.boolean().optional(),
+        exclude_title: z.string().optional(),
         years_experience_from: z.number().optional(),
         years_experience_to: z.number().optional(),
         years_current_past_experience_from: z.number().optional(),
@@ -745,6 +940,21 @@ export function createSignalHireMcpServer(options = {}) {
             .default("markdown")
             .optional(),
     }, async (args) => executeSignalHireTool("search_candidates_query", args, apiClient));
+    server.tool("search_people_at_companies", "Find people at a list of companies in as few searches as possible (companies are batched into OR queries, 10 per search). Use after search_companies_by_filters or bulk_find_company. Uses daily search quota.", {
+        companies: z.array(z.string()).min(1).max(50),
+        current_title: z.string().optional(),
+        exclude_title: z.string().optional(),
+        location: z.string().optional(),
+        department: z
+            .array(z.enum(SIGNALHIRE_DEPARTMENTS))
+            .optional(),
+        level: z.array(z.string()).optional(),
+        max_results: z.number().min(1).max(200).default(50).optional(),
+        response_format: z
+            .enum(["markdown", "json", "csv"])
+            .default("markdown")
+            .optional(),
+    }, async (args) => executeSignalHireTool("search_people_at_companies", args, apiClient));
     server.tool("scroll_search", "Fetch the next batch of search results for pagination. Must be called within 15 seconds of the previous search response. Tip: Prefer using search_candidates_query with auto_paginate=true or max_results to fetch all pages in one call.", {
         request_id: z.number(),
         scroll_id: z.string(),
@@ -801,6 +1011,15 @@ export function createSignalHireMcpServer(options = {}) {
             .default("markdown")
             .optional(),
     }, async (args) => executeSignalHireTool("get_company_info", args, apiClient));
+    server.tool("get_company_profile_count", "Free count of SignalHire profiles for one company (current, past, or both employees). Not real headcount. Needs Company API access.", {
+        company_id: z.string(),
+        status: z.enum(["current", "past", "both"]).default("current").optional(),
+    }, async (args) => executeSignalHireTool("get_company_profile_count", args, apiClient));
+    server.tool("get_company_profiles", "Request all employee profiles of a company. Profiles (no contacts) are POSTed to callback_url in batches of 100. Uses the daily profile-view quota. Needs Company API access.", {
+        company_id: z.string(),
+        status: z.enum(["current", "past", "both"]).default("current").optional(),
+        callback_url: z.string().url(),
+    }, async (args) => executeSignalHireTool("get_company_profiles", args, apiClient));
     server.tool("check_balance", "Check all SignalHire account balances and quotas: standard Contact Credits, daily Without-Contacts quota (with exact reset countdown), and Company Intelligence API status. Free tool.", {}, async () => executeSignalHireTool("check_balance", {}, apiClient));
     server.tool("check_without_contacts_credits", "Check the remaining daily quota for retrieving candidate profiles without contact details. Applies to retrieve_person_no_contacts. Shows exact time until midnight UTC reset.", {}, async () => executeSignalHireTool("check_without_contacts_credits", {}, apiClient));
     server.tool("get_available_levels", "Retrieve the complete list of candidate seniority levels supported by the SignalHire search API and their normalization rules. Free tool.", {}, async () => executeSignalHireTool("get_available_levels", {}, apiClient));

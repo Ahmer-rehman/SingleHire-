@@ -21,4 +21,4 @@ export interface CompanySummaryItem {
 }
 export declare function formatCompanyList(companies: CompanySummaryItem[], title?: string, format?: ResponseFormat, creditsLeft?: number | null): string;
 export declare function formatBalanceSummary(contactCredits: number, withoutContactsQuota: number, companyApiEnabled?: boolean): string;
-export declare function formatExportData(dataType: "candidates" | "companies", items: any[], format?: "csv" | "tsv_google_sheets"): string;
+export declare function formatExportData(dataType: "candidates" | "companies" | undefined, items: any[], format?: "csv" | "tsv_google_sheets"): string;

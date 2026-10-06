@@ -199,6 +199,7 @@ export interface SearchByQueryInput {
   autoPaginate?: boolean;
   maxResults?: number;
   strictCurrentLevel?: boolean;
+  excludeTitle?: string;
 }
 
 export interface SearchProfile {
@@ -222,6 +223,7 @@ export interface SearchByQueryResponse {
   total: number;
   scrollId?: string;
   profiles: SearchProfile[];
+  incomplete?: boolean;
 }
 
 // ─── Company API Definitions ──────────────────────────────────────────────────
@@ -283,6 +285,18 @@ export interface SearchCompaniesFilterInput {
   keywords?: string;
   companySize?: string;
   limit?: number;
+}
+
+export interface CompanyCountResponse {
+  total_profiles: number;
+}
+
+export type CompanyEmploymentStatus = "current" | "past" | "both";
+
+export interface CompanySizeFilterResult {
+  profiles: SearchProfile[];
+  checkedCompanies: number;
+  unknownCompanies: string[];
 }
 
 export interface BulkFindCompanyInput {
