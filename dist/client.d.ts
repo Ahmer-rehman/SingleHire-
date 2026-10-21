@@ -14,6 +14,8 @@ export interface SignalHireClientOptions {
     baseUrl?: string;
 }
 export declare function resolveCompanyDomain(companyName: string, location?: string): Promise<string>;
+export declare const KNOWN_FOUNDED_YEARS: Record<string, number>;
+export declare function resolveCompanyFoundedYear(companyName: string, domain?: string): Promise<number | null>;
 /** Best-guess SignalHire company slug from a company name, e.g. 'STC Solutions' -> 'stc-solutions'. */
 export declare function toCompanySlug(name: string): string;
 export declare function matchesCompanySize(count: number, sizeFilter?: string): boolean;

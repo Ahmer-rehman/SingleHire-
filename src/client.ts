@@ -124,6 +124,134 @@ export async function resolveCompanyDomain(
   return `${clean}.com`;
 }
 
+export const KNOWN_FOUNDED_YEARS: Record<string, number> = {
+  google: 1998,
+  alphabet: 2015,
+  apple: 1976,
+  microsoft: 1975,
+  amazon: 1994,
+  meta: 2004,
+  facebook: 2004,
+  netflix: 1997,
+  stripe: 2010,
+  uber: 2009,
+  airbnb: 2008,
+  shopify: 2006,
+  spotify: 2006,
+  tesla: 2003,
+  twitter: 2006,
+  x: 2006,
+  linkedin: 2002,
+  salesforce: 1999,
+  oracle: 1977,
+  ibm: 1911,
+  intel: 1968,
+  nvidia: 1993,
+  cisco: 1984,
+  adobe: 1982,
+  accenture: 1989,
+  elm: 1988,
+  "elm company": 1988,
+  stc: 1998,
+  "stc solutions": 2007,
+  "saudi telecom company": 1998,
+  aramco: 1933,
+  "saudi aramco": 1933,
+  ejada: 2005,
+  apptunix: 2013,
+  infosys: 1981,
+  tcs: 1968,
+  wipro: 1945,
+  openai: 2015,
+  anthropic: 2021,
+  slack: 2009,
+  zoom: 2011,
+  snowflake: 2012,
+  databricks: 2013,
+  bytedance: 2012,
+  tiktok: 2016,
+};
+
+const FOUNDED_YEAR_CACHE = new Map<string, number | null>();
+
+export async function resolveCompanyFoundedYear(
+  companyName: string,
+  domain?: string
+): Promise<number | null> {
+  if (!companyName) return null;
+  const raw = companyName.toLowerCase().trim();
+  if (KNOWN_FOUNDED_YEARS[raw]) return KNOWN_FOUNDED_YEARS[raw];
+
+  const clean = raw
+    .replace(/^(the|al)\s+/i, "")
+    .replace(
+      /\b(company|co|ltd|llc|inc|corporation|corp|systems|solutions|technologies|group|holding|holdings)\b/gi,
+      ""
+    )
+    .trim();
+
+  if (KNOWN_FOUNDED_YEARS[clean]) return KNOWN_FOUNDED_YEARS[clean];
+
+  if (FOUNDED_YEAR_CACHE.has(raw)) return FOUNDED_YEAR_CACHE.get(raw)!;
+  if (FOUNDED_YEAR_CACHE.has(clean)) return FOUNDED_YEAR_CACHE.get(clean)!;
+
+  // Build targeted search queries
+  const queries: string[] = [companyName];
+  if (clean && clean !== raw) {
+    queries.push(`${clean} company`);
+  }
+  if (domain) {
+    const domainRoot = domain.replace(/^(https?:\/\/)?(www\.)?/, "").split(".")[0];
+    if (domainRoot && domainRoot.length > 2 && !queries.includes(domainRoot)) {
+      queries.push(`${domainRoot} company`);
+    }
+  }
+
+  for (const q of queries) {
+    try {
+      const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(
+        q
+      )}&language=en&format=json&limit=3`;
+      const res = await fetch(searchUrl, {
+        headers: { "User-Agent": "SignalHireMCP/1.0 (admin@growviah.com)" },
+        signal: AbortSignal.timeout(2500),
+      });
+      if (!res.ok) continue;
+      const data = (await res.json()) as any;
+      const searchResults = data?.search || [];
+
+      for (const item of searchResults) {
+        const id = item.id;
+        const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${id}&property=P571&format=json`;
+        const claimRes = await fetch(entityUrl, {
+          headers: { "User-Agent": "SignalHireMCP/1.0 (admin@growviah.com)" },
+          signal: AbortSignal.timeout(2500),
+        });
+        if (!claimRes.ok) continue;
+        const claimData = (await claimRes.json()) as any;
+        const timeVal =
+          claimData?.claims?.P571?.[0]?.mainsnak?.datavalue?.value?.time;
+        if (timeVal) {
+          const match = String(timeVal).match(/([12][0-9]{3})/);
+          if (match) {
+            const yr = parseInt(match[1], 10);
+            if (yr >= 1800 && yr <= new Date().getFullYear()) {
+              FOUNDED_YEAR_CACHE.set(raw, yr);
+              FOUNDED_YEAR_CACHE.set(clean, yr);
+              return yr;
+            }
+          }
+        }
+      }
+    } catch {
+      // ignore and try next query
+    }
+  }
+
+  FOUNDED_YEAR_CACHE.set(raw, null);
+  return null;
+}
+
 /** Best-guess SignalHire company slug from a company name, e.g. 'STC Solutions' -> 'stc-solutions'. */
 export function toCompanySlug(name: string): string {
   const trimmed = name.trim();
@@ -637,6 +765,9 @@ export class SignalHireApiClient {
     if (!baseRes.founded && (baseRes as any).foundedYear) {
       baseRes.founded = (baseRes as any).foundedYear;
     }
+    if (!baseRes.founded) {
+      baseRes.founded = await resolveCompanyFoundedYear(baseRes.company || idOrSlug, baseRes.domain);
+    }
 
     return baseRes;
   }
@@ -865,6 +996,9 @@ export class SignalHireApiClient {
       } catch {
         // ignore
       }
+      if (!founded) {
+        founded = await resolveCompanyFoundedYear(name, domain);
+      }
 
       results.push({
         company: name,
@@ -964,6 +1098,9 @@ export class SignalHireApiClient {
           } catch {
             // ignore
           }
+          if (!founded) {
+            founded = await resolveCompanyFoundedYear(name, domain);
+          }
 
           return {
             company: name,
@@ -976,6 +1113,7 @@ export class SignalHireApiClient {
           };
         } catch {
           const fallbackDomain = await resolveCompanyDomain(name, location);
+          const fallbackFounded = await resolveCompanyFoundedYear(name, fallbackDomain);
           return {
             company: name,
             employeeCount: 0,
@@ -983,7 +1121,7 @@ export class SignalHireApiClient {
             industries: [],
             sampleRoles: [],
             topDomains: [fallbackDomain],
-            founded: null,
+            founded: fallbackFounded,
           };
         }
       });
