@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "jetro": {
+      "command": "/Users/ahmerrehman/.jetro/runtime/node-darwin-x64",
+      "args": [
+        "/Users/ahmerrehman/.jetro/mcp-server/index.js"
+      ],
+      "env": {
+        "JET_WORKSPACE": "/Users/ahmerrehman/Downloads/signalhire",
+        "JET_API_URL": "https://api.jetro.ai",
+        "PATH": "/Users/ahmerrehman/.jetro/runtime:/Users/ahmerrehman/.antigravity-ide/antigravity-ide/bin:/Users/ahmerrehman/.codeium/windsurf/bin:/Users/ahmerrehman/.antigravity-ide/antigravity-ide/bin:/usr/local/share/android-commandlinetools/cmdline-tools/latest/bin:/usr/local/share/android-commandlinetools/platform-tools:/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home/bin:/Users/ahmerrehman/Downloads/flutter/bin:/Users/ahmerrehman/.antigravity-ide/antigravity-ide/bin:/Users/ahmerrehman/.opencode/bin:/Users/ahmerrehman/.local/bin:/Users/ahmerrehman/.antigravity-ide/antigravity-ide/bin:/Users/ahmerrehman/.antigravity-ide/antigravity-ide/bin:/Users/ahmerrehman/.antigravity-ide/antigravity-ide/bin:/Users/ahmerrehman/.antigravity-ide/antigravity-ide/bin:/Users/ahmerrehman/.local/bin:/usr/local/opt/node@22/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/X11/bin"
+      }
+    }
+  }
+}

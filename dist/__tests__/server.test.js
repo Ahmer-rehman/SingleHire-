@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { SIGNALHIRE_DEPARTMENTS, SIGNALHIRE_INDUSTRIES, SIGNALHIRE_LEVELS, normalizeSeniorityLevels, } from "../constants.js";
-import { cleanMdTable, formatBalanceSummary, formatCandidateLookup, formatCompanyFind, formatCompanyInfo, formatExportData, formatSearchResults, } from "../formatters.js";
+import { cleanMdTable, formatBalanceSummary, formatCandidateLookup, formatCompanyFind, formatCompanyInfo, formatCompanyList, formatExportData, formatSearchResults, } from "../formatters.js";
 import { SIGNALHIRE_TOOLS, createSignalHireMcpServer } from "../server.js";
 import { SignalHireApiClient } from "../client.js";
 test("Constants: industries, departments, levels are properly loaded", () => {
@@ -103,6 +103,13 @@ test("Formatters: formatCompanyInfo and formatCompanyFind with enrichment", () =
     assert.ok(findMd.includes("elm.sa"));
     assert.ok(findMd.includes("Information Technology and Services"));
     assert.ok(findMd.includes("3,200"));
+    const findResultWithFounded = {
+        ...findResult,
+        founded: 1988,
+    };
+    const findMdWithFounded = formatCompanyFind(findResultWithFounded);
+    assert.ok(findMdWithFounded.includes("Est. 1988"));
+    assert.ok(findMdWithFounded.includes("Founded Year:** 1988"));
     const infoResult = {
         name: "Elm",
         linkedInId: "1033",
@@ -114,6 +121,35 @@ test("Formatters: formatCompanyInfo and formatCompanyFind with enrichment", () =
     const infoMd = formatCompanyInfo(infoResult, "markdown", 2000);
     assert.ok(infoMd.includes("Elm"));
     assert.ok(infoMd.includes("3,200"));
+});
+test("Formatters: formatCompanyList displays Founded tag/column in Markdown and CSV", () => {
+    const companies = [
+        {
+            company: "Elm",
+            founded: 1988,
+            employeeCount: 3200,
+            locations: ["Riyadh, Saudi Arabia"],
+            industries: ["Information Technology and Services"],
+            sampleRoles: ["Software Engineer", "CTO"],
+            topDomains: ["elm.sa"],
+        },
+        {
+            company: "Acme",
+            founded: 2023,
+            employeeCount: 15,
+            locations: ["Dubai, UAE"],
+            industries: ["Internet"],
+            sampleRoles: ["Founder"],
+            topDomains: ["acme.io"],
+        },
+    ];
+    const md = formatCompanyList(companies);
+    assert.ok(md.includes("| Founded |"));
+    assert.ok(md.includes("🏷️ `1988`"));
+    assert.ok(md.includes("🏷️ `2023`"));
+    const csv = formatCompanyList(companies, "Company Search Results", "csv");
+    assert.ok(csv.includes("Company,Founded,Domain,Employees in SignalHire"));
+    assert.ok(csv.includes('"Elm","1988","elm.sa"'));
 });
 test("Formatters: formatBalanceSummary displays contact credits and quota countdown", () => {
     const summary = formatBalanceSummary(2000, 0, false);
@@ -139,6 +175,20 @@ test("Formatters: formatExportData exports candidates and companies to TSV & CSV
     const csv = formatExportData("candidates", candidates, "csv");
     assert.ok(csv.includes('"Ahmed Al-Salem"'));
     assert.ok(csv.includes('"CTO"'));
+    const companies = [
+        {
+            company: "Elm",
+            founded: 1988,
+            domain: "elm.sa",
+            employeeCount: 3200,
+            locations: ["Riyadh"],
+            sampleRoles: ["CTO"],
+            industries: ["IT"],
+        },
+    ];
+    const compCsv = formatExportData("companies", companies, "csv");
+    assert.ok(compCsv.includes('"Company","Founded","Domain"'));
+    assert.ok(compCsv.includes('"Elm","1988","elm.sa"'));
 });
 test("Server: registers all 17 tools, resources, and prompts", () => {
     assert.equal(SIGNALHIRE_TOOLS.length, 17);

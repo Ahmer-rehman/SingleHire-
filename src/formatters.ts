@@ -446,13 +446,15 @@ export function formatCompanyFind(
   creditsLeft: number | null = null
 ): string {
   const safeComp = cleanMdTable(res.company);
+  const foundedTag = res.founded ? ` 🏷️ \`Est. ${res.founded}\`` : "";
   const domainText = res.domain
     ? `[${cleanMdTable(res.domain)}](https://${cleanMdTable(res.domain)})`
     : "—";
 
   const lines = [
-    `### 🏢 Company Identified: **${safeComp}**`,
+    `### 🏢 Company Identified: **${safeComp}**${foundedTag}`,
     `- **Company Name:** **${safeComp}**`,
+    res.founded ? `- **Founded Year:** ${res.founded}` : "",
     res.domain ? `- **Domain / Website:** ${domainText}` : "",
     res.industry ? `- **Industry:** ${cleanMdTable(res.industry)}` : "",
     res.employeeCount !== undefined
@@ -479,6 +481,7 @@ export interface CompanySummaryItem {
   industries: string[];
   sampleRoles: string[];
   topDomains: string[];
+  founded?: number | string | null;
 }
 
 export function formatCompanyList(
@@ -494,6 +497,7 @@ export function formatCompanyList(
   if (format === "csv") {
     const headers = [
       "Company",
+      "Founded",
       "Domain",
       "Employees in SignalHire",
       "Primary Locations",
@@ -503,6 +507,7 @@ export function formatCompanyList(
 
     const rows = companies.map((c) => [
       escapeCsv(c.company),
+      escapeCsv(c.founded || ""),
       escapeCsv(c.topDomains?.[0] || ""),
       escapeCsv(c.employeeCount),
       escapeCsv(c.locations.join("; ")),
@@ -516,18 +521,19 @@ export function formatCompanyList(
   // Default: Markdown with safe table cells (no broken pipes)
   const lines: string[] = [];
   lines.push(`### 🏢 ${title} (${companies.length} Companies)`);
-  lines.push("", "| # | Company | Domain / Website | Headcount in SignalHire | Primary Locations | Sample Roles |");
-  lines.push("| :- | :--- | :--- | :--- | :--- | :--- |");
+  lines.push("", "| # | Company | Founded | Domain / Website | Headcount in SignalHire | Primary Locations | Sample Roles |");
+  lines.push("| :- | :--- | :--- | :--- | :--- | :--- | :--- |");
 
   companies.forEach((c, idx) => {
     const safeComp = cleanMdTable(c.company);
+    const foundedTag = c.founded ? `🏷️ \`${c.founded}\`` : "—";
     const domainText = c.topDomains?.[0]
       ? `[${cleanMdTable(c.topDomains[0])}](https://${cleanMdTable(c.topDomains[0])})`
       : "—";
     const safeLoc = cleanMdTable(c.locations.slice(0, 2).join(", "));
     const safeRoles = cleanMdTable(c.sampleRoles.slice(0, 3).join(", "));
     lines.push(
-      `| ${idx + 1} | **${safeComp}** | ${domainText} | ~${c.employeeCount.toLocaleString()} | ${safeLoc} | ${safeRoles} |`
+      `| ${idx + 1} | **${safeComp}** | ${foundedTag} | ${domainText} | ~${c.employeeCount.toLocaleString()} | ${safeLoc} | ${safeRoles} |`
     );
   });
 
@@ -574,6 +580,9 @@ export function formatBalanceSummary(
 function extractCompanyExportRow(c: any): string[] {
   const name =
     c.company || c.name || c.companyName || c.company_name || c.Company || c.Name || "";
+  const foundedVal =
+    c.founded ?? c.foundedYear ?? c.founded_year ?? c.Founded ?? c.FoundedYear ?? "";
+  const founded = String(foundedVal);
   const domain =
     c.domain || c.website || c.url || c.topDomains?.[0] || c.Domain || c.Website || c.URL || "";
   const headcountVal =
@@ -599,7 +608,7 @@ function extractCompanyExportRow(c: any): string[] {
   const inds = c.industries ?? c.industry ?? c.Industries ?? c.Industry ?? [];
   const industries = Array.isArray(inds) ? inds.join("; ") : String(inds);
 
-  return [name, domain, headcount, locations, sampleRoles, industries];
+  return [name, founded, domain, headcount, locations, sampleRoles, industries];
 }
 
 function extractCandidateExportRow(p: any): string[] {
@@ -640,6 +649,7 @@ export function formatExportData(
   if (targetType === "companies") {
     const headers = [
       "Company",
+      "Founded",
       "Domain",
       "Headcount in SignalHire",
       "Primary Locations",

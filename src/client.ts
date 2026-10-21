@@ -634,6 +634,9 @@ export class SignalHireApiClient {
 
     // Always resolve domain cleanly
     baseRes.domain = profileDomain || (await resolveCompanyDomain(idOrSlug, location));
+    if (!baseRes.founded && (baseRes as any).foundedYear) {
+      baseRes.founded = (baseRes as any).foundedYear;
+    }
 
     return baseRes;
   }
@@ -853,6 +856,16 @@ export class SignalHireApiClient {
       const domain =
         domainFromProfiles(data.profiles, name) || (await resolveCompanyDomain(name, location));
 
+      let founded: number | string | null = null;
+      try {
+        const findRes = await this.findCompany(name);
+        if (findRes) {
+          founded = findRes.founded ?? (findRes as any).foundedYear ?? null;
+        }
+      } catch {
+        // ignore
+      }
+
       results.push({
         company: name,
         employeeCount: totalDb ?? data.count,
@@ -861,6 +874,7 @@ export class SignalHireApiClient {
         sampleRoles: Array.from(data.sampleRoles).slice(0, 4),
         topDomains: [domain],
         sampleUids: data.uids.slice(0, 3),
+        founded,
       });
 
       if (results.length >= limit) break;
@@ -941,6 +955,16 @@ export class SignalHireApiClient {
             domainFromProfiles(searchRes.profiles || []) ||
             (await resolveCompanyDomain(name, location));
 
+          let founded: number | string | null = null;
+          try {
+            const findRes = await this.findCompany(name);
+            if (findRes) {
+              founded = findRes.founded ?? (findRes as any).foundedYear ?? null;
+            }
+          } catch {
+            // ignore
+          }
+
           return {
             company: name,
             employeeCount: searchRes.total,
@@ -948,6 +972,7 @@ export class SignalHireApiClient {
             industries: [],
             sampleRoles: Array.from(sampleRoles).slice(0, 3),
             topDomains: [domain],
+            founded,
           };
         } catch {
           const fallbackDomain = await resolveCompanyDomain(name, location);
@@ -958,6 +983,7 @@ export class SignalHireApiClient {
             industries: [],
             sampleRoles: [],
             topDomains: [fallbackDomain],
+            founded: null,
           };
         }
       });

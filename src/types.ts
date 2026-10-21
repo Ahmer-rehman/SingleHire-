@@ -236,6 +236,7 @@ export interface CompanyFindResponse {
   industry?: string;
   employeeCount?: number;
   locations?: string[];
+  founded?: number | string | null;
 }
 
 export interface CompanyLocation {
@@ -277,6 +278,7 @@ export interface CompanySummary {
   sampleRoles: string[];
   topDomains: string[];
   sampleUids?: string[];
+  founded?: number | string | null;
 }
 
 export interface SearchCompaniesFilterInput {

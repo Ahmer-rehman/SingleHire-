@@ -18,9 +18,9 @@ Production-ready Model Context Protocol (MCP) server for **[SignalHire](https://
 | `scroll_search` | Paginate through search batches using `request_id` and `scroll_id` (15s TTL). | Daily Search Quota |
 | `retrieve_person_no_contacts` | Retrieve full professional career history, skills, education, and certifications **without** unlocking contacts. Displays reset countdown if quota is reached. | Daily Without-Contacts Quota *(Zero Contact Credits)* |
 | `retrieve_person_profile` | Reveal full profile **including verified personal/work emails, direct phone numbers, and social links**. | ⚠️ 1 Contact Credit per match *(Guarded by `spend_credits_confirmed: true`)* |
-| `find_company` | Look up company by name or domain to check employee headcount, office locations, industry, and primary domain in SignalHire. Enriched data makes wrong matches easy to spot. | **Free** |
-| `bulk_find_company` | **(NEW)** Bulk search and compare multiple companies in a single call (up to 20 companies). Returns a comparative headcount, location, role, and domain table. | **Free** |
-| `search_companies_by_filters` | **(NEW)** Search companies by industry (from 146 categories), country/location, keywords (e.g. 'Fintech', 'SaaS', 'Logistics'), and company size. | **Free** |
+| `find_company` | Look up company by name or domain to check employee headcount, office locations, industry, founded year tag (`Est. YYYY`), and primary domain in SignalHire. Enriched data makes wrong matches easy to spot. | **Free** |
+| `bulk_find_company` | **(NEW)** Bulk search and compare multiple companies in a single call (up to 20 companies). Returns a comparative headcount, founded year tag/column, location, role, and domain table. | **Free** |
+| `search_companies_by_filters` | **(NEW)** Search companies by industry (from 146 categories), country/location, keywords (e.g. 'Fintech', 'SaaS', 'Logistics'), and company size with founded year intelligence. | **Free** |
 | `get_company_info` | Comprehensive company data: verified headcount, locations, industry, founded year, specialities (with talent pool analytics fallback). | ⚠️ 1 Company Credit *(Guarded by `spend_credits_confirmed: true`)* |
 | `check_balance` | Check all balances and quotas: standard Contact Credits (2,000), daily Without-Contacts quota (with reset countdown), and Company Intelligence API status. | **Free** |
 | `check_without_contacts_credits` | Check remaining daily without-contacts profile quota with countdown to 00:00 UTC reset. | **Free** |

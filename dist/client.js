@@ -482,6 +482,9 @@ export class SignalHireApiClient {
         }
         // Always resolve domain cleanly
         baseRes.domain = profileDomain || (await resolveCompanyDomain(idOrSlug, location));
+        if (!baseRes.founded && baseRes.foundedYear) {
+            baseRes.founded = baseRes.foundedYear;
+        }
         return baseRes;
     }
     async getCompanyInfo(idOrSlug) {
@@ -656,6 +659,16 @@ export class SignalHireApiClient {
                 continue;
             }
             const domain = domainFromProfiles(data.profiles, name) || (await resolveCompanyDomain(name, location));
+            let founded = null;
+            try {
+                const findRes = await this.findCompany(name);
+                if (findRes) {
+                    founded = findRes.founded ?? findRes.foundedYear ?? null;
+                }
+            }
+            catch {
+                // ignore
+            }
             results.push({
                 company: name,
                 employeeCount: totalDb ?? data.count,
@@ -664,6 +677,7 @@ export class SignalHireApiClient {
                 sampleRoles: Array.from(data.sampleRoles).slice(0, 4),
                 topDomains: [domain],
                 sampleUids: data.uids.slice(0, 3),
+                founded,
             });
             if (results.length >= limit)
                 break;
@@ -724,6 +738,16 @@ export class SignalHireApiClient {
                     }
                     const domain = domainFromProfiles(searchRes.profiles || []) ||
                         (await resolveCompanyDomain(name, location));
+                    let founded = null;
+                    try {
+                        const findRes = await this.findCompany(name);
+                        if (findRes) {
+                            founded = findRes.founded ?? findRes.foundedYear ?? null;
+                        }
+                    }
+                    catch {
+                        // ignore
+                    }
                     return {
                         company: name,
                         employeeCount: searchRes.total,
@@ -731,6 +755,7 @@ export class SignalHireApiClient {
                         industries: [],
                         sampleRoles: Array.from(sampleRoles).slice(0, 3),
                         topDomains: [domain],
+                        founded,
                     };
                 }
                 catch {
@@ -742,6 +767,7 @@ export class SignalHireApiClient {
                         industries: [],
                         sampleRoles: [],
                         topDomains: [fallbackDomain],
+                        founded: null,
                     };
                 }
             });

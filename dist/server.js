@@ -281,7 +281,7 @@ export const SIGNALHIRE_TOOLS = [
     },
     {
         name: "find_company",
-        description: "Look up a company by name or domain to check employee presence, headcount, primary domain/website, industry, and office locations in SignalHire. Enriched data makes wrong matches easy to spot.",
+        description: "Look up a company by name or domain to check employee presence, headcount, founded year, primary domain/website, industry, and office locations in SignalHire. Enriched data makes wrong matches easy to spot.",
         inputSchema: {
             type: "object",
             properties: {
@@ -299,7 +299,7 @@ export const SIGNALHIRE_TOOLS = [
     },
     {
         name: "bulk_find_company",
-        description: "Bulk search and compare multiple companies in a single call. Checks headcount in SignalHire, verified office locations, sample roles, and primary domains for up to 20 companies at once.",
+        description: "Bulk search and compare multiple companies in a single call. Checks headcount in SignalHire, founded year, verified office locations, sample roles, and primary domains for up to 20 companies at once.",
         inputSchema: {
             type: "object",
             properties: {
@@ -324,7 +324,7 @@ export const SIGNALHIRE_TOOLS = [
     },
     {
         name: "search_companies_by_filters",
-        description: "Search companies by filters like industry (from 146 supported categories), country/location, keywords (e.g. 'Fintech', 'SaaS', 'Logistics'), and company size. Aggregates employee presence from the SignalHire database.",
+        description: "Search companies by filters like industry (from 146 supported categories), country/location, keywords (e.g. 'Fintech', 'SaaS', 'Logistics'), and company size. Aggregates employee presence, founded year, and corporate domains from the SignalHire database.",
         inputSchema: {
             type: "object",
             properties: {
@@ -980,11 +980,11 @@ export function createSignalHireMcpServer(options = {}) {
             .default("markdown")
             .optional(),
     }, async (args) => executeSignalHireTool("retrieve_person_profile", args, apiClient));
-    server.tool("find_company", "Look up a company by name or domain to check employee presence, headcount, primary domain/website, industry, and office locations in SignalHire. Enriched data makes wrong matches easy to spot.", {
+    server.tool("find_company", "Look up a company by name or domain to check employee presence, headcount, founded year, primary domain/website, industry, and office locations in SignalHire. Enriched data makes wrong matches easy to spot.", {
         company_id_or_slug: z.string(),
         location: z.string().optional(),
     }, async (args) => executeSignalHireTool("find_company", args, apiClient));
-    server.tool("bulk_find_company", "Bulk search and compare multiple companies in a single call. Checks headcount in SignalHire, verified office locations, sample roles, and primary domains for up to 20 companies at once.", {
+    server.tool("bulk_find_company", "Bulk search and compare multiple companies in a single call. Checks headcount in SignalHire, founded year, verified office locations, sample roles, and primary domains for up to 20 companies at once.", {
         companies: z.array(z.string()).min(1).max(20),
         location: z.string().optional(),
         response_format: z
@@ -992,7 +992,7 @@ export function createSignalHireMcpServer(options = {}) {
             .default("markdown")
             .optional(),
     }, async (args) => executeSignalHireTool("bulk_find_company", args, apiClient));
-    server.tool("search_companies_by_filters", "Search companies by filters like industry (from 146 supported categories), country/location, keywords (e.g. 'Fintech', 'SaaS', 'Logistics'), and company size. Aggregates employee presence from the SignalHire database.", {
+    server.tool("search_companies_by_filters", "Search companies by filters like industry (from 146 supported categories), country/location, keywords (e.g. 'Fintech', 'SaaS', 'Logistics'), and company size. Aggregates employee presence, founded year, and corporate domains from the SignalHire database.", {
         industry: z.string().optional(),
         location: z.string().optional(),
         keywords: z.string().optional(),

@@ -18,6 +18,7 @@ export interface CompanySummaryItem {
     industries: string[];
     sampleRoles: string[];
     topDomains: string[];
+    founded?: number | string | null;
 }
 export declare function formatCompanyList(companies: CompanySummaryItem[], title?: string, format?: ResponseFormat, creditsLeft?: number | null): string;
 export declare function formatBalanceSummary(contactCredits: number, withoutContactsQuota: number, companyApiEnabled?: boolean): string;

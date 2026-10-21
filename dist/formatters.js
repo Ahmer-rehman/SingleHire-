@@ -351,12 +351,14 @@ export function formatCompanyInfo(company, format = "markdown", creditsLeft = nu
 // ─── Format Company Search ID ─────────────────────────────────────────────────
 export function formatCompanyFind(res, creditsLeft = null) {
     const safeComp = cleanMdTable(res.company);
+    const foundedTag = res.founded ? ` 🏷️ \`Est. ${res.founded}\`` : "";
     const domainText = res.domain
         ? `[${cleanMdTable(res.domain)}](https://${cleanMdTable(res.domain)})`
         : "—";
     const lines = [
-        `### 🏢 Company Identified: **${safeComp}**`,
+        `### 🏢 Company Identified: **${safeComp}**${foundedTag}`,
         `- **Company Name:** **${safeComp}**`,
+        res.founded ? `- **Founded Year:** ${res.founded}` : "",
         res.domain ? `- **Domain / Website:** ${domainText}` : "",
         res.industry ? `- **Industry:** ${cleanMdTable(res.industry)}` : "",
         res.employeeCount !== undefined
@@ -379,6 +381,7 @@ export function formatCompanyList(companies, title = "Company Search Results", f
     if (format === "csv") {
         const headers = [
             "Company",
+            "Founded",
             "Domain",
             "Employees in SignalHire",
             "Primary Locations",
@@ -387,6 +390,7 @@ export function formatCompanyList(companies, title = "Company Search Results", f
         ];
         const rows = companies.map((c) => [
             escapeCsv(c.company),
+            escapeCsv(c.founded || ""),
             escapeCsv(c.topDomains?.[0] || ""),
             escapeCsv(c.employeeCount),
             escapeCsv(c.locations.join("; ")),
@@ -398,16 +402,17 @@ export function formatCompanyList(companies, title = "Company Search Results", f
     // Default: Markdown with safe table cells (no broken pipes)
     const lines = [];
     lines.push(`### 🏢 ${title} (${companies.length} Companies)`);
-    lines.push("", "| # | Company | Domain / Website | Headcount in SignalHire | Primary Locations | Sample Roles |");
-    lines.push("| :- | :--- | :--- | :--- | :--- | :--- |");
+    lines.push("", "| # | Company | Founded | Domain / Website | Headcount in SignalHire | Primary Locations | Sample Roles |");
+    lines.push("| :- | :--- | :--- | :--- | :--- | :--- | :--- |");
     companies.forEach((c, idx) => {
         const safeComp = cleanMdTable(c.company);
+        const foundedTag = c.founded ? `🏷️ \`${c.founded}\`` : "—";
         const domainText = c.topDomains?.[0]
             ? `[${cleanMdTable(c.topDomains[0])}](https://${cleanMdTable(c.topDomains[0])})`
             : "—";
         const safeLoc = cleanMdTable(c.locations.slice(0, 2).join(", "));
         const safeRoles = cleanMdTable(c.sampleRoles.slice(0, 3).join(", "));
-        lines.push(`| ${idx + 1} | **${safeComp}** | ${domainText} | ~${c.employeeCount.toLocaleString()} | ${safeLoc} | ${safeRoles} |`);
+        lines.push(`| ${idx + 1} | **${safeComp}** | ${foundedTag} | ${domainText} | ~${c.employeeCount.toLocaleString()} | ${safeLoc} | ${safeRoles} |`);
     });
     lines.push("", "> 💡 **Tip:** To inspect decision-makers at any of these companies, call `search_candidates_query` with `current_company: \"<CompanyName>\"` and `level: [\"C-Level\", \"VP\", \"Directors\"]`.");
     return appendCreditsFooter(lines.join("\n"), creditsLeft);
@@ -437,6 +442,8 @@ export function formatBalanceSummary(contactCredits, withoutContactsQuota, compa
 // ─── Format Export Data (CSV & Google Sheets TSV) ─────────────────────────────
 function extractCompanyExportRow(c) {
     const name = c.company || c.name || c.companyName || c.company_name || c.Company || c.Name || "";
+    const foundedVal = c.founded ?? c.foundedYear ?? c.founded_year ?? c.Founded ?? c.FoundedYear ?? "";
+    const founded = String(foundedVal);
     const domain = c.domain || c.website || c.url || c.topDomains?.[0] || c.Domain || c.Website || c.URL || "";
     const headcountVal = c.employeeCount ??
         c.headcount ??
@@ -455,7 +462,7 @@ function extractCompanyExportRow(c) {
     const sampleRoles = Array.isArray(rolesVal) ? rolesVal.join("; ") : String(rolesVal);
     const inds = c.industries ?? c.industry ?? c.Industries ?? c.Industry ?? [];
     const industries = Array.isArray(inds) ? inds.join("; ") : String(inds);
-    return [name, domain, headcount, locations, sampleRoles, industries];
+    return [name, founded, domain, headcount, locations, sampleRoles, industries];
 }
 function extractCandidateExportRow(p) {
     const uid = p.uid || p.UID || p.id || p.Id || "";
@@ -483,6 +490,7 @@ export function formatExportData(dataType = "candidates", items, format = "csv")
     if (targetType === "companies") {
         const headers = [
             "Company",
+            "Founded",
             "Domain",
             "Headcount in SignalHire",
             "Primary Locations",
